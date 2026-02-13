@@ -58,52 +58,6 @@ function executeUpdate() {
     }
 }
 
-// نظام التثبيت الإجباري (PWA Install Prompt)
-let deferredPrompt;
-const installModal = document.getElementById('installModal');
-const mainApp = document.getElementById('mainApp');
-
-function isAppInstalled() {
-    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-}
-
-if (isAppInstalled()) {
-    mainApp.classList.remove('hidden'); // يفتح طبيعي إذا كان مثبت
-} else {
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        installModal.classList.remove('hidden');
-    });
-    
-    // إظهار نافذة التثبيت في حالة لم يكن التطبيق مستقلاً
-    setTimeout(() => {
-        if(!isAppInstalled()) {
-            installModal.classList.remove('hidden');
-        }
-    }, 500);
-}
-
-function installApp() {
-    if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') {
-                installModal.classList.add('hidden');
-                mainApp.classList.remove('hidden');
-            }
-            deferredPrompt = null;
-        });
-    } else {
-        alert('يرجى تثبيت التطبيق من خيارات المتصفح (إضافة إلى الشاشة الرئيسية).');
-    }
-}
-
-window.addEventListener('appinstalled', () => {
-    installModal.classList.add('hidden');
-    mainApp.classList.remove('hidden');
-});
-
 // --- نهاية أكواد PWA ---
 
 
