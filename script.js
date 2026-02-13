@@ -1,5 +1,6 @@
 // --- PWA & Service Worker Logic ---
 const APP_VERSION_URL = 'version.json';
+let latestVersion = null;
 
 // تسجيل Service Worker
 if ('serviceWorker' in navigator) {
@@ -13,20 +14,20 @@ async function checkForUpdates() {
     try {
         const response = await fetch(APP_VERSION_URL + '?t=' + new Date().getTime());
         const data = await response.json();
-        const newVersion = data.version;
+        latestVersion = data.version;
         const currentVersion = localStorage.getItem('appVersion');
 
         if (!currentVersion) {
-            localStorage.setItem('appVersion', newVersion);
-        } else if (currentVersion !== newVersion) {
+            localStorage.setItem('appVersion', latestVersion);
+        } else if (currentVersion !== latestVersion) {
             document.getElementById('updateModal').classList.remove('hidden');
         }
     } catch (e) { console.log('Offline or error checking update'); }
 }
 checkForUpdates();
 
-// دالة زر التحديث (تنظيف الكاش والريستارت)
-function executeUpdate() {
+// دالة زر التحديث (تم حل مشكلة التعليق هنا)
+async function executeUpdate() {
     const btnText = document.getElementById('updateBtnText');
     const spinner = document.getElementById('updateSpinner');
     const btn = document.getElementById('updateBtn');
@@ -35,26 +36,27 @@ function executeUpdate() {
     btnText.style.display = 'none';
     spinner.style.display = 'block';
 
-    caches.keys().then(function(names) {
-        for (let name of names) caches.delete(name);
-    });
+    try {
+        // تحديث رقم الإصدار في التخزين المحلي فوراً
+        if (latestVersion) {
+            localStorage.setItem('appVersion', latestVersion);
+        }
 
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-            for(let registration of registrations) {
-                registration.unregister();
-            }
-        }).then(() => {
-            fetch(APP_VERSION_URL + '?t=' + new Date().getTime()).then(r=>r.json()).then(data => {
-                localStorage.setItem('appVersion', data.version);
-                window.location.reload(true);
-            });
-        });
-    } else {
-        fetch(APP_VERSION_URL + '?t=' + new Date().getTime()).then(r=>r.json()).then(data => {
-            localStorage.setItem('appVersion', data.version);
-            window.location.reload(true);
-        });
+        // مسح الكاش بالكامل بشكل متزامن
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+
+        // إلغاء تسجيل Service Worker بشكل متزامن
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(registrations.map(r => r.unregister()));
+        }
+    } catch (e) {
+        console.log('Update Error:', e);
+    } finally {
+        // إخفاء النافذة وإعادة التحميل الإجباري في كل الأحوال
+        document.getElementById('updateModal').classList.add('hidden');
+        window.location.reload();
     }
 }
 
@@ -78,7 +80,7 @@ function switchTab(event, tabId) {
     event.currentTarget.classList.add("active");
 }
 
-let PASSWORD="1001"; // تم تغيير رمز الدخول كما طلبت
+let PASSWORD="1001";
 let secureMode=false;
 let showOnlyOverdue=false;
 let data=JSON.parse(localStorage.getItem("aqsat"))||[];
