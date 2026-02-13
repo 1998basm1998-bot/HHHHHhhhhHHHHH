@@ -1,6 +1,5 @@
 // --- PWA & Service Worker Logic ---
 const APP_VERSION_URL = 'version.json';
-let latestVersion = null;
 
 // تسجيل Service Worker
 if ('serviceWorker' in navigator) {
@@ -14,7 +13,7 @@ async function checkForUpdates() {
     try {
         const response = await fetch(APP_VERSION_URL + '?t=' + new Date().getTime());
         const data = await response.json();
-        latestVersion = data.version;
+        const latestVersion = data.version;
         const currentVersion = localStorage.getItem('appVersion');
 
         if (!currentVersion) {
@@ -26,7 +25,7 @@ async function checkForUpdates() {
 }
 checkForUpdates();
 
-// دالة زر التحديث (تم حل مشكلة التعليق هنا)
+// دالة زر التحديث (تم الحل الجذري لمشكلة تكرار الرسالة)
 async function executeUpdate() {
     const btnText = document.getElementById('updateBtnText');
     const spinner = document.getElementById('updateSpinner');
@@ -37,26 +36,31 @@ async function executeUpdate() {
     spinner.style.display = 'block';
 
     try {
-        // تحديث رقم الإصدار في التخزين المحلي فوراً
-        if (latestVersion) {
-            localStorage.setItem('appVersion', latestVersion);
+        // جلب رقم الإصدار الجديد وحفظه فوراً قبل أي عملية أخرى
+        const response = await fetch(APP_VERSION_URL + '?t=' + new Date().getTime());
+        const data = await response.json();
+        localStorage.setItem('appVersion', data.version);
+
+        // مسح جميع ملفات الكاش
+        if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(name => caches.delete(name)));
         }
 
-        // مسح الكاش بالكامل بشكل متزامن
-        const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map(name => caches.delete(name)));
-
-        // إلغاء تسجيل Service Worker بشكل متزامن
+        // إلغاء تسجيل Service Worker
         if ('serviceWorker' in navigator) {
             const registrations = await navigator.serviceWorker.getRegistrations();
-            await Promise.all(registrations.map(r => r.unregister()));
+            for (let registration of registrations) {
+                await registration.unregister();
+            }
         }
     } catch (e) {
         console.log('Update Error:', e);
     } finally {
-        // إخفاء النافذة وإعادة التحميل الإجباري في كل الأحوال
+        // إخفاء النافذة
         document.getElementById('updateModal').classList.add('hidden');
-        window.location.reload();
+        // إعادة تحميل الصفحة مع كسر الكاش إجبارياً (Cache Buster)
+        window.location.href = window.location.pathname + '?updated=' + new Date().getTime();
     }
 }
 
