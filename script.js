@@ -1,5 +1,6 @@
 // --- PWA & Service Worker Logic ---
 const APP_VERSION_URL = 'version.json';
+let latestVersion = null;
 
 // تسجيل Service Worker
 if ('serviceWorker' in navigator) {
@@ -13,7 +14,9 @@ async function checkForUpdates() {
     try {
         const response = await fetch(APP_VERSION_URL + '?t=' + new Date().getTime());
         const data = await response.json();
-        const latestVersion = data.version;
+        
+        // ✅ الحل الجذري: تحويل رقم الإصدار إلى نص لتجنب حلقة التحديث اللانهائية
+        latestVersion = String(data.version);
         const currentVersion = localStorage.getItem('appVersion');
 
         if (!currentVersion) {
@@ -25,7 +28,7 @@ async function checkForUpdates() {
 }
 checkForUpdates();
 
-// دالة زر التحديث (تم الحل الجذري لمشكلة تكرار الرسالة)
+// دالة زر التحديث
 async function executeUpdate() {
     const btnText = document.getElementById('updateBtnText');
     const spinner = document.getElementById('updateSpinner');
@@ -36,12 +39,12 @@ async function executeUpdate() {
     spinner.style.display = 'block';
 
     try {
-        // جلب رقم الإصدار الجديد وحفظه فوراً قبل أي عملية أخرى
-        const response = await fetch(APP_VERSION_URL + '?t=' + new Date().getTime());
-        const data = await response.json();
-        localStorage.setItem('appVersion', data.version);
+        // حفظ الإصدار الجديد في التخزين المحلي كنص
+        if (latestVersion) {
+            localStorage.setItem('appVersion', latestVersion);
+        }
 
-        // مسح جميع ملفات الكاش
+        // مسح الكاش بالكامل
         if ('caches' in window) {
             const cacheNames = await caches.keys();
             await Promise.all(cacheNames.map(name => caches.delete(name)));
@@ -50,17 +53,17 @@ async function executeUpdate() {
         // إلغاء تسجيل Service Worker
         if ('serviceWorker' in navigator) {
             const registrations = await navigator.serviceWorker.getRegistrations();
-            for (let registration of registrations) {
-                await registration.unregister();
+            for (let r of registrations) {
+                await r.unregister();
             }
         }
     } catch (e) {
         console.log('Update Error:', e);
     } finally {
-        // إخفاء النافذة
+        // إخفاء النافذة 
         document.getElementById('updateModal').classList.add('hidden');
-        // إعادة تحميل الصفحة مع كسر الكاش إجبارياً (Cache Buster)
-        window.location.href = window.location.pathname + '?updated=' + new Date().getTime();
+        // ✅ إعادة تحميل الصفحة وتجاوز كاش المتصفح إجبارياً
+        window.location.href = window.location.pathname + '?v=' + new Date().getTime();
     }
 }
 
