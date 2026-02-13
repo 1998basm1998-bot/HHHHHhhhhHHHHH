@@ -1,0 +1,204 @@
+body{
+    font-family:Arial,"Tahoma","Noto Naskh Arabic","Amiri",sans-serif;
+    direction:rtl;
+    background:linear-gradient(to left,#0d47a1,#1976d2);
+    margin:0;
+    padding:20px;
+    font-weight:bold;
+}
+.container{
+    background:#fff;
+    max-width:1200px;
+    margin:auto;
+    padding:20px;
+    border-radius:15px;
+}
+h1{text-align:center;color:#0d47a1;font-weight:bold}
+.box{
+    background:#fff3e0;
+    border:2px solid orange;
+    border-radius:10px;
+    padding:15px;
+    margin-bottom:15px;
+}
+.box h2{
+    margin-top:0;
+    color:#0d47a1;
+    font-weight:bold;
+    font-size:18px;
+}
+input,button{
+    padding:10px;
+    width:100%;
+    margin:5px 0;
+    border-radius:8px;
+    border:1px solid #ccc;
+    font-weight:bold;
+    box-sizing:border-box;
+}
+button{background:#0d47a1;color:#fff;border:none;cursor:pointer}
+button:hover{background:#08306b}
+#loginBtn, #closeBtn {
+    background:#6a1b9a;
+    color:#fff;
+    border:2px solid #4a148c;
+    font-weight:bold;
+    border-radius:8px;
+    padding:10px;
+    cursor:pointer;
+    width:100%;
+    margin:10px 0;
+}
+#loginBtn:hover, #closeBtn:hover {background:#7b1fa2;}
+#search{background:#cce5ff}
+#name{background:#d4edda}
+#item{background:#e2d6f3}
+#phone{background:#fff3cd}
+#total{background:#ffe5b4}
+#paid{background:#f8d7da}
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:15px;
+    font-size:14px;
+    font-weight:bold;
+}
+th,td{
+    border:1px solid #ccc;
+    padding:7px;
+    text-align:center;
+    font-weight:bold;
+}
+th{background:#0d47a1;color:#fff}
+.hidden{display:none}
+.pay{background:#2e7d32}
+.addDebt{background:#ff9800}
+.report{background:#6a1b9a}
+.delete{background:#c62828}
+.whatsapp{background:#25d366}
+.logout{background:#555}
+.overdue{background:#ffebee;color:#b71c1c;font-weight:bold;}
+.totalBox{
+    background:#fff3e0;
+    border:2px solid orange;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:15px;
+    font-size:18px;
+    text-align:center;
+    font-weight:bold;
+}
+#reportModal{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.6);
+    overflow:auto;
+    z-index:9999;
+}
+#reportContent{
+    background:#fff;
+    margin:20px auto;
+    padding:20px;
+    border-radius:10px;
+    max-width:600px;
+    width:90%;
+    max-height:80vh;
+    overflow-y:auto;
+    font-weight:bold;
+    position:relative;
+}
+#closeReportBtn{
+    position:absolute;
+    top:10px;
+    right:15px;
+    background:#c62828;
+    color:#fff;
+    border:none;
+    border-radius:50%;
+    width:30px;
+    height:30px;
+    font-size:18px;
+    cursor:pointer;
+    font-weight:bold;
+}
+#closeReportBtn:hover{background:#b71c1c;}
+button.deletePay, button.deleteItem{
+    background:#c62828;
+    color:#fff;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+    padding:3px 6px;
+    font-weight:bold;
+}
+button.deletePay:hover, button.deleteItem:hover{background:#b71c1c;}
+
+/* أكواد التبويبات المضافة للهواتف */
+.tab-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    overflow-x: auto;
+}
+.tab-btn {
+    flex: 1;
+    padding: 12px 5px;
+    background: #e0e0e0;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+    white-space: nowrap;
+    transition: background 0.3s;
+}
+.tab-btn.active {
+    background: #0d47a1;
+    color: #fff;
+    border-color: #08306b;
+}
+.tab-content {
+    display: none;
+    animation: fadeIn 0.4s;
+}
+.tab-content.active {
+    display: block;
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.tab-buttons::-webkit-scrollbar {
+    display: none;
+}
+.table-responsive {
+    overflow-x: auto;
+    width: 100%;
+}
+
+/* --- تصميم نوافذ التحديث والتثبيت (PWA Modals) --- */
+.pwa-modal {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); display: flex; justify-content: center;
+    align-items: center; z-index: 100000; flex-direction: column; text-align: center;
+}
+.pwa-modal-content {
+    background: #fff; padding: 30px; border-radius: 15px; max-width: 400px; width: 90%;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+.pwa-modal-content h3 { color: #0d47a1; margin-top: 0; font-size: 22px; }
+.pwa-modal-content p { color: #333; font-size: 16px; margin-bottom: 20px; }
+.pwa-btn {
+    background: #2e7d32; color: white; border: none; padding: 15px 20px;
+    font-size: 18px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold;
+    transition: 0.3s;
+}
+.pwa-btn:hover { background: #1b5e20; }
+.pwa-btn:disabled { background: #9e9e9e; cursor: not-allowed; }
+.spinner {
+    border: 4px solid #f3f3f3; border-top: 4px solid #fff; border-radius: 50%;
+    width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 0 auto; display: none;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
