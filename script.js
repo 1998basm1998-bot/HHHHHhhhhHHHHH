@@ -1,83 +1,10 @@
 // --- PWA & Service Worker Logic ---
-const APP_VERSION_URL = 'version.json';
-let latestVersion = null;
-
 // تسجيل Service Worker
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('service-worker.js').catch(err => console.log('SW Error:', err));
     });
 }
-
-// نظام التحديث الإجباري
-async function checkForUpdates() {
-    try {
-        // إضافة no-store لمنع الكاش تماماً من المتصفح عند التحقق
-        const response = await fetch(APP_VERSION_URL + '?t=' + new Date().getTime(), { cache: 'no-store' });
-        const data = await response.json();
-        
-        // تنظيف القيمة من أي مسافات مخفية
-        latestVersion = String(data.version).trim();
-        let currentVersion = localStorage.getItem('appVersion');
-
-        // ✅ الحل الجذري: إذا كان المستخدم قد ضغط على التحديث للتو، نحدث الإصدار ونمنع الرسالة من الظهور
-        if (sessionStorage.getItem('pwa_updated_just_now')) {
-            sessionStorage.removeItem('pwa_updated_just_now');
-            localStorage.setItem('appVersion', latestVersion);
-            return; // إنهاء الدالة فوراً
-        }
-
-        // معالجة القيم الفارغة بشكل سليم
-        if (!currentVersion || currentVersion === 'null' || currentVersion === 'undefined') {
-            localStorage.setItem('appVersion', latestVersion);
-        } else if (currentVersion.trim() !== latestVersion) {
-            document.getElementById('updateModal').classList.remove('hidden');
-        }
-    } catch (e) { console.log('Offline or error checking update', e); }
-}
-checkForUpdates();
-
-// دالة زر التحديث
-async function executeUpdate() {
-    const btnText = document.getElementById('updateBtnText');
-    const spinner = document.getElementById('updateSpinner');
-    const btn = document.getElementById('updateBtn');
-
-    btn.disabled = true;
-    btnText.style.display = 'none';
-    spinner.style.display = 'block';
-
-    try {
-        if (latestVersion) {
-            localStorage.setItem('appVersion', latestVersion);
-        }
-
-        // ✅ إضافة العلامة السرية لمنع ظهور الرسالة بعد تحديث الصفحة مباشرة
-        sessionStorage.setItem('pwa_updated_just_now', 'true');
-
-        // مسح الكاش بالكامل
-        if ('caches' in window) {
-            const cacheNames = await caches.keys();
-            await Promise.all(cacheNames.map(name => caches.delete(name)));
-        }
-
-        // إلغاء Service Worker
-        if ('serviceWorker' in navigator) {
-            const registrations = await navigator.serviceWorker.getRegistrations();
-            for (let r of registrations) {
-                await r.unregister();
-            }
-        }
-    } catch (e) {
-        console.log('Update Error:', e);
-    } finally {
-        // إخفاء النافذة
-        document.getElementById('updateModal').classList.add('hidden');
-        // كسر الكاش نهائياً وإعادة التحميل
-        window.location.href = window.location.href.split('?')[0] + '?v=' + new Date().getTime();
-    }
-}
-
 // --- نهاية أكواد PWA ---
 
 
