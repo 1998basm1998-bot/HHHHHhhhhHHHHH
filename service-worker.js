@@ -4,8 +4,7 @@ const urlsToCache = [
   './index.html',
   './style.css',
   './script.js',
-  './manifest.json',
-  './version.json'
+  './manifest.json'
 ];
 
 // تثبيت Service Worker وتخزين الملفات
@@ -21,12 +20,6 @@ self.addEventListener('install', event => {
 
 // استراتيجية Cache First
 self.addEventListener('fetch', event => {
-  // استثناء ملف version.json من الكاش ليتم التحقق من التحديثات دائماً
-  if (event.request.url.includes('version.json')) {
-      event.respondWith(fetch(event.request));
-      return;
-  }
-
   event.respondWith(
     caches.match(event.request)
       .then(response => {
