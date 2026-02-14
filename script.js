@@ -12,19 +12,28 @@ if ('serviceWorker' in navigator) {
 // نظام التحديث الإجباري
 async function checkForUpdates() {
     try {
-        const response = await fetch(APP_VERSION_URL + '?t=' + new Date().getTime());
+        // إضافة no-store لمنع الكاش تماماً من المتصفح عند التحقق
+        const response = await fetch(APP_VERSION_URL + '?t=' + new Date().getTime(), { cache: 'no-store' });
         const data = await response.json();
         
-        // ✅ الحل الجذري: تحويل رقم الإصدار إلى نص لتجنب حلقة التحديث اللانهائية
-        latestVersion = String(data.version);
-        const currentVersion = localStorage.getItem('appVersion');
+        // تنظيف القيمة من أي مسافات مخفية
+        latestVersion = String(data.version).trim();
+        let currentVersion = localStorage.getItem('appVersion');
 
-        if (!currentVersion) {
+        // ✅ الحل الجذري: إذا كان المستخدم قد ضغط على التحديث للتو، نحدث الإصدار ونمنع الرسالة من الظهور
+        if (sessionStorage.getItem('pwa_updated_just_now')) {
+            sessionStorage.removeItem('pwa_updated_just_now');
             localStorage.setItem('appVersion', latestVersion);
-        } else if (currentVersion !== latestVersion) {
+            return; // إنهاء الدالة فوراً
+        }
+
+        // معالجة القيم الفارغة بشكل سليم
+        if (!currentVersion || currentVersion === 'null' || currentVersion === 'undefined') {
+            localStorage.setItem('appVersion', latestVersion);
+        } else if (currentVersion.trim() !== latestVersion) {
             document.getElementById('updateModal').classList.remove('hidden');
         }
-    } catch (e) { console.log('Offline or error checking update'); }
+    } catch (e) { console.log('Offline or error checking update', e); }
 }
 checkForUpdates();
 
@@ -39,10 +48,12 @@ async function executeUpdate() {
     spinner.style.display = 'block';
 
     try {
-        // حفظ الإصدار الجديد في التخزين المحلي كنص
         if (latestVersion) {
             localStorage.setItem('appVersion', latestVersion);
         }
+
+        // ✅ إضافة العلامة السرية لمنع ظهور الرسالة بعد تحديث الصفحة مباشرة
+        sessionStorage.setItem('pwa_updated_just_now', 'true');
 
         // مسح الكاش بالكامل
         if ('caches' in window) {
@@ -50,7 +61,7 @@ async function executeUpdate() {
             await Promise.all(cacheNames.map(name => caches.delete(name)));
         }
 
-        // إلغاء تسجيل Service Worker
+        // إلغاء Service Worker
         if ('serviceWorker' in navigator) {
             const registrations = await navigator.serviceWorker.getRegistrations();
             for (let r of registrations) {
@@ -60,10 +71,10 @@ async function executeUpdate() {
     } catch (e) {
         console.log('Update Error:', e);
     } finally {
-        // إخفاء النافذة 
+        // إخفاء النافذة
         document.getElementById('updateModal').classList.add('hidden');
-        // ✅ إعادة تحميل الصفحة وتجاوز كاش المتصفح إجبارياً
-        window.location.href = window.location.pathname + '?v=' + new Date().getTime();
+        // كسر الكاش نهائياً وإعادة التحميل
+        window.location.href = window.location.href.split('?')[0] + '?v=' + new Date().getTime();
     }
 }
 
